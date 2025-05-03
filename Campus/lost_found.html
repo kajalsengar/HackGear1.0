@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lost & Found</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #eef2f7;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .section {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 45%;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .item {
+      background: #f9f9f9;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-left: 4px solid #007bff;
+    }
+
+    .item img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h2>Upload Lost/Found Item</h2>
+    <input type="text" id="itemTitle" placeholder="Item Title" />
+    <textarea id="itemDescription" placeholder="Description..."></textarea>
+    <input type="file" id="itemImage" />
+    <button onclick="uploadItem()">Upload</button>
+  </div>
+
+  <div class="section">
+    <h2>View Items</h2>
+    <div id="itemsList"></div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Replace with your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXjmGepaQKXJITGUOIwjw_6AuZxtDHLZ8",
+      authDomain: "campus-connect-8a7e7.firebaseapp.com",
+      projectId: "campus-connect-8a7e7",
+      storageBucket: "campus-connect-8a7e7.appspot.com",
+      messagingSenderId: "672031438837",
+      appId: "1:672031438837:web:21c2e3a9f2b3b27bb552bc"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const db = firebase.firestore();
+
+    function uploadItem() {
+      const title = document.getElementById("itemTitle").value;
+      const description = document.getElementById("itemDescription").value;
+      const file = document.getElementById("itemImage").files[0];
+
+      if (!title || !description || !file) {
+        alert("All fields are required!");
+        return;
+      }
+
+      const ref = storage.ref("lostfound/" + file.name);
+      ref.put(file).then(snapshot => snapshot.ref.getDownloadURL())
+      .then(url => {
+        return db.collection("lostfound").add({
+          title: title,
+          description: description,
+          imageUrl: url,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      })
+      .then(() => {
+        alert("Item uploaded successfully!");
+        loadItems();
+      })
+      .catch(err => {
+        alert("Upload failed: " + err.message);
+      });
+    }
+
+    function loadItems() {
+      const list = document.getElementById("itemsList");
+      list.innerHTML = "";
+
+      db.collection("lostfound").orderBy("timestamp", "desc").get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <strong>${data.title}</strong><br>
+            <p>${data.description}</p>
+            <img src="${data.imageUrl}" />
+          `;
+          list.appendChild(div);
+        });
+      });
+    }
+
+    window.onload = loadItems;
+  </script>
+</body>
+</html>

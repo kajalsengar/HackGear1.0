@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Notes - Campus Connect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+    }
+
+    .left, .right {
+      flex: 1;
+      padding: 30px;
+      box-sizing: border-box;
+    }
+
+    .left {
+      background: #f4f4f4;
+    }
+
+    .right {
+      background: #eaeaea;
+      overflow-y: auto;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .note {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .note h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .note img {
+      margin-top: 10px;
+      width: 100%;
+      max-height: 250px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <!-- Left Side: Upload Notes -->
+  <div class="left">
+    <h2>Upload Notes</h2>
+    <input type="text" id="noteTitle" placeholder="Enter Title">
+    <input type="file" id="noteFile" accept="image/*">
+    <button onclick="uploadNote()">Upload</button>
+  </div>
+
+  <!-- Right Side: View Notes -->
+  <div class="right">
+    <h2>Uploaded Notes</h2>
+    <div id="notesList"></div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDXjmGepaQKXJITGUOIwjw_6AuZxtDHLZ8",
+    authDomain: "campus-connect-8a7e7.firebaseapp.com",
+    databaseURL: "https://campus-connect-8a7e7-default-rtdb.firebaseio.com",
+    projectId: "campus-connect-8a7e7",
+    storageBucket: "campus-connect-8a7e7.appspot.com",
+    messagingSenderId: "672031438837",
+    appId: "1:672031438837:web:21c2e3a9f2b3b27bb552bc"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const storage = firebase.storage();
+
+  function uploadNote() {
+    const title = document.getElementById("noteTitle").value;
+    const file = document.getElementById("noteFile").files[0];
+
+    if (!title || !file) {
+      alert("Please provide title and select a photo.");
+      return;
+    }
+
+    const storageRef = storage.ref('notes/' + Date.now() + '_' + file.name);
+    storageRef.put(file)
+      .then(snapshot => snapshot.ref.getDownloadURL())
+      .then(url => {
+        return db.ref("notes").push({
+          title: title,
+          imageUrl: url,
+          timestamp: Date.now()
+        });
+      })
+      .then(() => {
+        alert("Note uploaded successfully!");
+        document.getElementById("noteTitle").value = "";
+        document.getElementById("noteFile").value = "";
+      })
+      .catch(error => {
+        alert("Upload failed: " + error.message);
+      });
+  }
+
+  function loadNotes() {
+    db.ref("notes").on("value", snapshot => {
+      const data = snapshot.val();
+      const list = document.getElementById("notesList");
+      list.innerHTML = "";
+
+      if (data) {
+        const sorted = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+        sorted.forEach(note => {
+          const div = document.createElement("div");
+          div.className = "note";
+          div.innerHTML = `<h3>${note.title}</h3><img src="${note.imageUrl}" alt="${note.title}" />`;
+          list.appendChild(div);
+        });
+      } else {
+        list.innerHTML = "<p>No notes uploaded yet.</p>";
+      }
+    });
+  }
+
+  loadNotes();
+</script>
+
+</body>
+</html>

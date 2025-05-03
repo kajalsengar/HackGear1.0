@@ -1,0 +1,277 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8">
+  <title>Campus Connect - Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #e8f0f2;
+      justify-content: center;
+      background-color: #9585b9;
+    }
+
+    .navbar {
+      background-color: #764ba2;
+      color: white;
+      padding: 15px 30px;
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      justify-content: center;
+      padding: 50px 200px;
+      margin: auto;
+      /* margin-left: 200px; */
+    }
+
+    .dashboard-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 4px 10px rgba(20px, 0, 0, 0.1);
+      text-align: center;
+      /* margin-left:auto; */
+      transition: transform 0.3s ease;
+      justify-content: center;
+      justify-items: auto;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-10px);
+    }
+
+    .dashboard-card i {
+      font-size: 40px;
+      color: #764ba2;
+      margin-bottom: 15px;
+    }
+
+    .dashboard-card h3 {
+      font-size: 22px;
+      color: #333;
+      margin-bottom: 15px;
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      justify-items: center;
+    }
+
+    .dashboard-card p {
+      font-size: 16px;
+      color: #777;
+      
+    }
+
+    .dashboard-card button {
+      background-color: #764ba2;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    .dashboard-card button:hover {
+      background-color: #5e3f9f;
+    }
+
+    .logout-btn {
+      background-color: #3d2474;
+      color: wheat;
+      margin-top: 0;
+      width: 100%;
+      height: 50px;
+      margin-left: 325px;
+      border-radius: 10px;
+      border: none;
+    }
+
+    .logout-btn:hover {
+      background-color: #d8caca;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #fff;
+      margin-top: 30px;
+      font-size: 14px;
+      color: #aaa;
+    }
+
+  </style>
+</head>
+<body>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXjmGepaQKXJITGUOIwjw_6AuZxtDHLZ8",
+    authDomain: "campus-connect-8a7e7.firebaseapp.com",
+    databaseURL: "https://campus-connect-8a7e7-default-rtdb.firebaseio.com",
+    projectId: "campus-connect-8a7e7",
+    storageBucket: "campus-connect-8a7e7.firebasestorage.app",
+    messagingSenderId: "672031438837",
+    appId: "1:672031438837:web:21c2e3a9f2b3b27bb552bc",
+    measurementId: "G-M6JKPFBVNC"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    
+        // Function to add announcement
+        window.addAnnouncement = async function () {
+          const title = document.getElementById("announcementTitle").value;
+          const body = document.getElementById("announcementBody").value;
+    
+          if (!title || !body) {
+            alert("Title aur body dono likho!");
+            return;
+          }
+    
+          try {
+            const docRef = await addDoc(collection(db, "announcements"), {
+              title,
+              body,
+              timestamp: serverTimestamp()
+            });
+            alert("Announcement added!");
+            fetchAnnouncements();  // Fetch the updated list
+          } catch (e) {
+            alert("Error: " + e.message);
+            console.error("Error adding document: ", e);
+          }
+        };
+    
+        // Function to fetch announcements
+        async function fetchAnnouncements() {
+          const querySnapshot = await getDocs(collection(db, "announcements"));
+          const announcementsContainer = document.getElementById("announcementsContainer");
+          announcementsContainer.innerHTML = ""; // Clear previous announcements
+    
+          querySnapshot.forEach((doc) => {
+            const announcement = doc.data();
+            const announcementElement = document.createElement("div");
+            announcementElement.classList.add("announcement");
+            
+            // Add title and body
+            announcementElement.innerHTML = `
+              <h3>${announcement.title}</h3>
+              <p>${announcement.body}</p>
+            `;
+            
+            announcementsContainer.appendChild(announcementElement);
+          });
+        }
+    
+        // Fetch announcements when the page loads
+        window.onload = function () {
+          fetchAnnouncements();
+        };
+      </script>
+
+
+  <div class="navbar">
+    Campus Connect - Dashboard
+  </div>
+
+  <div class="container">
+    <!-- Dashboard Cards -->
+    <div class="dashboard-card">
+      <i class="fas fa-bullhorn"></i>
+      <h3>Announcements</h3>
+      <p>View and update campus announcements</p>
+      <button onclick="window.location.href='announcement.html'">View Announcements</button>
+    </div>
+
+    <div class="dashboard-card">
+      <i class="fas fa-upload"></i>
+      <h3>Upload Notes</h3>
+      <p>Upload and share your study notes with others</p>
+      <button onclick="uploadNotes()">Upload Notes</button>
+    </div>
+
+    <div class="dashboard-card">
+      <i class="fas fa-comments"></i>
+      <h3>Chat</h3>
+      <p>Connect with students and faculty through chat</p>
+      <button onclick="chat()">Start Chat</button>
+    </div>
+
+    <div class="dashboard-card">
+      <i class="fas fa-search"></i>
+      <h3>Lost & Found</h3>
+      <p>Post and find lost items on campus</p>
+      <button onclick="lostFound()">View Lost & Found</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Campus Connect. All rights reserved.</p>
+  </footer>
+
+  <script type="module">
+    import { firebaseConfig } from "../firebaseConfig.js";
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function viewAnnouncements() {
+      alert("Viewing announcements page...");
+      // Redirect to announcements page or display data here
+    }
+
+    function uploadNotes() {
+      alert("Redirect to upload notes...");
+      // Redirect to notes upload page
+    }
+
+    function chat() {
+      alert("Starting chat functionality...");
+      // Redirect or implement chat here
+    }
+
+    function lostFound() {
+      alert("Lost & Found page here...");
+      // Redirect or show lost & found posts
+    }
+
+    function logout() {
+      auth.signOut()
+        .then(() => {
+          alert("Logged out successfully");
+          window.location.href = "index.html"; // Back to login
+        })
+        .catch((error) => {
+          alert("Logout Failed: " + error.message);
+        });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Announcements - Campus Connect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+    }
+
+    .left, .right {
+      flex: 1;
+      padding: 30px;
+      box-sizing: border-box;
+    }
+
+    .left {
+      background: #f4f4f4;
+    }
+
+    .right {
+      background: #eaeaea;
+      overflow-y: auto;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .announcement {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .announcement h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .announcement p {
+      margin: 5px 0 0;
+      color: #333;
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <!-- Left Section: Add Announcement -->
+  <div class="left">
+    <h2>Add Announcement</h2>
+    <input type="text" id="title" placeholder="Title">
+    <textarea id="description" placeholder="Description"></textarea>
+    <button onclick="addAnnouncement()">Post</button>
+  </div>
+
+  <!-- Right Section: View Announcements -->
+  <div class="right">
+    <h2>Announcements</h2>
+    <div id="announcementList"></div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDXjmGepaQKXJITGUOIwjw_6AuZxtDHLZ8",
+    authDomain: "campus-connect-8a7e7.firebaseapp.com",
+    databaseURL: "https://campus-connect-8a7e7-default-rtdb.firebaseio.com",
+    projectId: "campus-connect-8a7e7",
+    storageBucket: "campus-connect-8a7e7.appspot.com",
+    messagingSenderId: "672031438837",
+    appId: "1:672031438837:web:21c2e3a9f2b3b27bb552bc"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function addAnnouncement() {
+    const title = document.getElementById("title").value;
+    const description = document.getElementById("description").value;
+
+    if (!title || !description) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    const newRef = db.ref("announcements").push();
+    newRef.set({
+      title: title,
+      description: description,
+      timestamp: Date.now()
+    }).then(() => {
+      alert("Announcement added!");
+      document.getElementById("title").value = "";
+      document.getElementById("description").value = "";
+    }).catch((error) => {
+      alert("Error: " + error.message);
+    });
+  }
+
+  function loadAnnouncements() {
+    db.ref("announcements").on("value", (snapshot) => {
+      const listDiv = document.getElementById("announcementList");
+      listDiv.innerHTML = "";
+
+      const data = snapshot.val();
+      if (data) {
+        const sorted = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+        sorted.forEach((item) => {
+          const div = document.createElement("div");
+          div.className = "announcement";
+          div.innerHTML = `<h3>${item.title}</h3><p>${item.description}</p>`;
+          listDiv.appendChild(div);
+        });
+      } else {
+        listDiv.innerHTML = "<p>No announcements yet.</p>";
+      }
+    });
+  }
+
+  loadAnnouncements();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Campus Connect Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+    }
+
+    .chat-container {
+      width: 90%;
+      max-width: 600px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 15px;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.4);
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      border-bottom: 1px solid #fff;
+    }
+
+    .chat-box {
+      padding: 15px;
+      height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-message {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 10px 15px;
+      border-radius: 10px;
+      max-width: 70%;
+      align-self: flex-start;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 15px;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-top: 1px solid #fff;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .chat-input button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin-left: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .chat-input button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">Campus Chat</div>
+  <div class="chat-box" id="chat-box"></div>
+  <div class="chat-input">
+    <input type="text" id="messageInput" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDXjmGepaQKXJITGUOIwjw_6AuZxtDHLZ8",
+    authDomain: "campus-connect-8a7e7.firebaseapp.com",
+    projectId: "campus-connect-8a7e7",
+    storageBucket: "campus-connect-8a7e7.appspot.com",
+    messagingSenderId: "672031438837",
+    appId: "1:672031438837:web:21c2e3a9f2b3b27bb552bc"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const chatBox = document.getElementById("chat-box");
+  const input = document.getElementById("messageInput");
+
+  async function sendMessage() {
+    const message = input.value.trim();
+    if (message !== "") {
+      await addDoc(collection(db, "messages"), {
+        text: message,
+        timestamp: serverTimestamp()
+      });
+      input.value = "";
+    }
+  }
+
+  // Real-time message fetch
+  const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+  onSnapshot(q, (snapshot) => {
+    chatBox.innerHTML = "";
+    snapshot.forEach((doc) => {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "chat-message";
+      msgDiv.textContent = doc.data().text;
+      chatBox.appendChild(msgDiv);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+
+  window.sendMessage = sendMessage;
+</script>
+
+</body>
+</html>
+
+  
+  
+  

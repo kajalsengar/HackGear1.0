@@ -104,71 +104,79 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDXjmGepaQKXJITGUOIwjw_6AuZxtDHLZ8",
-    authDomain: "campus-connect-8a7e7.firebaseapp.com",
-    databaseURL: "https://campus-connect-8a7e7-default-rtdb.firebaseio.com",
-    projectId: "campus-connect-8a7e7",
-    storageBucket: "campus-connect-8a7e7.appspot.com",
-    messagingSenderId: "672031438837",
-    appId: "1:672031438837:web:21c2e3a9f2b3b27bb552bc"
+ 
+const notes = [];
+
+function uploadNote() {
+  const title = document.getElementById("noteTitle").value;
+  const fileInput = document.getElementById("noteFile");
+  const file = fileInput.files[0];
+
+  if (!title || !file) {
+    alert("Please provide title and select a photo.");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const imageUrl = e.target.result;
+
+    const newNote = {
+      title: title,
+      imageUrl: imageUrl,
+      timestamp: Date.now()
+    };
+
+    notes.push(newNote);
+    saveNotes();
+    displayNotes();
+
+    alert("Note uploaded successfully!");
+    document.getElementById("noteTitle").value = "";
+    document.getElementById("noteFile").value = "";
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const storage = firebase.storage();
+  reader.readAsDataURL(file);
+}
 
-  function uploadNote() {
-    const title = document.getElementById("noteTitle").value;
-    const file = document.getElementById("noteFile").files[0];
+function saveNotes() {
+  localStorage.setItem("notes", JSON.stringify(notes));
+}
 
-    if (!title || !file) {
-      alert("Please provide title and select a photo.");
-      return;
-    }
-
-    const storageRef = storage.ref('notes/' + Date.now() + '_' + file.name);
-    storageRef.put(file)
-      .then(snapshot => snapshot.ref.getDownloadURL())
-      .then(url => {
-        return db.ref("notes").push({
-          title: title,
-          imageUrl: url,
-          timestamp: Date.now()
-        });
-      })
-      .then(() => {
-        alert("Note uploaded successfully!");
-        document.getElementById("noteTitle").value = "";
-        document.getElementById("noteFile").value = "";
-      })
-      .catch(error => {
-        alert("Upload failed: " + error.message);
-      });
+function loadNotes() {
+  const storedNotes = localStorage.getItem("notes");
+  if (storedNotes) {
+    notes.push(...JSON.parse(storedNotes));
   }
+  displayNotes();
+}
 
-  function loadNotes() {
-    db.ref("notes").on("value", snapshot => {
-      const data = snapshot.val();
-      const list = document.getElementById("notesList");
-      list.innerHTML = "";
+function displayNotes() {
+  const list = document.getElementById("notesList");
+  list.innerHTML = "";
 
-      if (data) {
-        const sorted = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-        sorted.forEach(note => {
-          const div = document.createElement("div");
-          div.className = "note";
-          div.innerHTML = `<h3>${note.title}</h3><img src="${note.imageUrl}" alt="${note.title}" />`;
-          list.appendChild(div);
-        });
-      } else {
-        list.innerHTML = "<p>No notes uploaded yet.</p>";
-      }
+  if (notes.length > 0) {
+    const sorted = notes.sort((a, b) => b.timestamp - a.timestamp);
+    sorted.forEach(note => {
+      const div = document.createElement("div");
+      div.className = "note";
+      div.innerHTML = `<h3>${note.title}</h3><img src="${note.imageUrl}" alt="${note.title}" />`;
+      list.appendChild(div);
     });
+  } else {
+    list.innerHTML = "<p>No notes uploaded yet.</p>";
   }
+}
 
-  loadNotes();
+loadNotes();
+
 </script>
 
 </body>
